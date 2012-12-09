@@ -1,4 +1,5 @@
 from random import shuffle
+import sys
 class Card():
   SUITS = ['S', 'H', 'D', 'C']
   SUITS_UNI = {'S': u'\u2660', 'H': u'\u2665', 'D': u'\u2666', 'C': u'\u2663'}
@@ -362,6 +363,17 @@ class Blackjack():
 
 
 if __name__ == '__main__':
-  print "Playing blackjack"
-  blackjack = Blackjack()
+  starting_balance = None
+  if len(sys.argv) > 1:
+    arg1 = sys.argv[1]
+    try:
+      arg1 = int(float(arg1))
+      if isinstance(arg1, int):
+        starting_balance = arg1
+    except:
+      pass
+  if starting_balance != None:
+    blackjack = Blackjack(starting_balance)
+  else:
+    blackjack = Blackjack()
   blackjack.new_game_state()
