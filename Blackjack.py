@@ -21,6 +21,7 @@ class Card():
   def int_value(self):
     if self.value in self.FACE_CARDS:
       if self.value == self.A:
+        # Ace can be represented as 1 or 11
         return [1, 11]
       return 10
     return self.value
@@ -31,6 +32,7 @@ class Card():
     return str(self.value)
 
   def str_suit(self):
+    # prettier representation
     return (self.SUITS_UNI[self.suit]).encode('utf-8')
 
 
@@ -63,12 +65,15 @@ class Blackjack():
     self.deck = []
     self.player_bal = starting_bal
 
+    # starting values / this is probably not necessary
+    # since it's done in new round. However, I like to
+    # have all of my variables initialzied in __init__
     self.best_player_val = -1
     self.best_dealer_val = -1
     self.player_values = []
     self.dealer_values = []
     self.player_bet = 0
-    # init deck
+    # build deck
     for suit in Card.SUITS:
       for value in Card.VALUES:
         self.deck.append(Card(value, suit))
@@ -76,16 +81,21 @@ class Blackjack():
     self.round_num = 0
 
   def new_game_state(self):
+    # always shuffle the deck at the very start.
+    # this only happens once.
     shuffle(self.deck)
     self.new_round_state()
 
   def __update_hand(self, player):
+    # this is called every time a player hand
+    # is added to.
     if player:
       hand = self.players_hand
     else:
       hand = self.dealers_hand
     values = self.__get_hand_value(hand)
     busted = values[0] > 21
+    # find the optimal value for deciding the result of the game
     best_val = -1
     for value in values:
       if value <= 21 and value > best_val:
@@ -102,19 +112,23 @@ class Blackjack():
 
 
   def players_turn_state(self, should_print_info = True, must_stand = False):
+    # print prettily -
+    # if it's called immediatly after a new round,
+    # we don't need to print some things (they were just printed)
     if should_print_info:
       self.__print_player_info()
     else:
       print 'Your turn'
     if self.player_busted:
       return self.end_game_state()
-    # ask for either hit, stand, or double down (if allowed)
     can_dd = self.player_bal >= self.player_bet
 
     HIT = 0
     STAND = 1
     DD = 2
 
+    # ask for either hit, stand, or double down (if allowed)
+    # while loop is to make sure we get valid input
     while True:
       if must_stand:
         action = STAND
@@ -135,6 +149,7 @@ class Blackjack():
         elif inp[0] == 'd' and can_dd:
           action = DD
           break
+
     if action == HIT:
       # deal to player
       self.players_hand.append(self.deck.pop())
@@ -155,13 +170,14 @@ class Blackjack():
       print 'Double down'
       print 'Balance: $' + str(self.player_bal)
       return self.players_turn_state(must_stand = True)
+    else:
+      # should never get here
+      return
 
-    return NotImplementedError
 
   def dealers_turn_state(self, subsequent_round = True):
     # dealer's cards can now be face up.
     self.dealers_hand[1].set_face_down(False)
-    # ask for either hit, stand, or double down (if allowed)
 
     if not subsequent_round:
       print
@@ -224,9 +240,8 @@ class Blackjack():
         result = PW
       else:
         # push
-        # we'll just say player wins
-        # TODO what should we do?
-        result = PW
+        # we'll just say tie
+        result = PU
 
     if result == PW:
       self.player_wins += 1
@@ -236,6 +251,7 @@ class Blackjack():
       self.player_losses += 1
       print 'You lose!'
     elif result == PU:
+      self.player_bal += self.player_bet
       print 'Push'
 
     print ''
@@ -276,6 +292,9 @@ class Blackjack():
     print 'Balance: $' + str(self.player_bal)
     # reset player / dealer hands
     # put used cards on the bottom
+    if len(self.dealers_hand) >= 2:
+      # make sure card is back to face up
+      self.dealers_hand[1].set_face_down(False)
     self.deck = self.players_hand + self.dealers_hand + self.deck
     self.players_hand = []
     self.dealers_hand = []
