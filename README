@@ -1,0 +1,13 @@
+Single Player Blackjack
+
+This program runs a simple player vs dealer blackjack game. The command to run the program is:
+python Blackjack.py
+
+The default starting balance for the player is $500. This can be specified with an addition argument.
+For example, to specifiy a starting balance of $6000, one can run:
+python Blackjack.py 6000
+
+All code for this program can be found in Blackjack.py. The code uses the random and sys python libraries.
+
+I'm not 100% clear on all the nitty gritty rules of Blackjack, but I think I got the gist of it. As
+requested, the dealer must hit on soft 17, and splitting is not allowed.

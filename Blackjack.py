@@ -1,5 +1,6 @@
 from random import shuffle
 import sys
+
 class Card():
   SUITS = ['S', 'H', 'D', 'C']
   SUITS_UNI = {'S': u'\u2660', 'H': u'\u2665', 'D': u'\u2666', 'C': u'\u2663'}
