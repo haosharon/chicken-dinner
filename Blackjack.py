@@ -281,7 +281,7 @@ class Blackjack():
     print 'Round ' + str(self.round_num)
     print 'Wins: ' + str(self.player_wins)
     print 'Losses: ' + str(self.player_losses)
-    total_played = self.player_wins + self.player_losses
+    total_played = self.round_num - 1
     if total_played > 0:
       print 'Win percentage: ' + str(100.0 * self.player_wins / total_played) + '%'
     # determine whether we need to shuffle the deck
@@ -304,13 +304,19 @@ class Blackjack():
     self.dealer_values = []
     self.player_bet = 0
 
+    if self.player_bal <= 0:
+      # player has no more money... loses
+      print "I'm sorry, you're out of money!"
+      print 'Game Over, Goodbye!'
+      return
+
     # ask for player to bet
     while True:
       print 'How much would you like to bet? (integer value)'
       inp = raw_input('--> ')
       try:
         inp = int(float(inp))
-        if inp < self.player_bal:
+        if inp <= self.player_bal:
           self.player_bet = inp
           self.player_bal -= inp
           break
