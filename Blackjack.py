@@ -50,7 +50,7 @@ class Blackjack():
   DEALERS_TURN = 2
   END_GAME = 3
   NEW_ROUND = 4
-  def __init__(self):
+  def __init__(self, starting_bal = 500):
     self.state = self.NEW_GAME
     self.player_wins = 0
     self.player_losses = 0
@@ -59,15 +59,18 @@ class Blackjack():
     self.players_hand = []
     self.dealers_hand = []
     self.deck = []
+    self.player_bal = starting_bal
 
     self.best_player_val = -1
     self.best_dealer_val = -1
     self.player_values = []
     self.dealer_values = []
+    self.player_bet = 0
     # init deck
     for suit in Card.SUITS:
       for value in Card.VALUES:
         self.deck.append(Card(value, suit))
+        pass
     self.round_num = 0
 
   def new_game_state(self):
@@ -96,20 +99,28 @@ class Blackjack():
       self.dealer_best_val = best_val
 
 
-  def players_turn_state(self, should_print_info = True):
+  def players_turn_state(self, should_print_info = True, must_stand = False):
     if should_print_info:
       self.__print_player_info()
+    else:
+      print 'Your turn'
     if self.player_busted:
       return self.end_game_state()
     # ask for either hit, stand, or double down (if allowed)
-    can_dd = False
+    can_dd = self.player_bal >= self.player_bet
 
     HIT = 0
     STAND = 1
     DD = 2
 
     while True:
-      print 'Would you like to hit (h) or stand (s)?'
+      if must_stand:
+        action = STAND
+        break
+      if can_dd:
+        print 'Would you like to hit (h), stand (s), or double down (d)?'
+      else:
+        print 'Would you like to hit (h) or stand (s)?'
       inp = raw_input('--> ')
       inp = inp.lower()
       if len(inp) > 0:
@@ -126,26 +137,49 @@ class Blackjack():
       # deal to player
       self.players_hand.append(self.deck.pop())
       self.__update_hand(True)
+      print 'Hit'
       return self.players_turn_state()
     elif action == STAND:
       # stand, dealer's turn
-      return self.dealers_turn_state()
-    else:
+      print 'Stand'
+      return self.dealers_turn_state(False)
+    elif action == DD:
       # player chose to double down
-      return NotImplementedError
+      self.player_bal -= self.player_bet
+      self.player_bet += self.player_bet
+      self.players_hand.append(self.deck.pop())
+      self.__update_hand(True)
+      self.__shuffle_deck()
+      print 'Double down'
+      print 'Balance: $' + str(self.player_bal)
+      return self.players_turn_state(must_stand = True)
 
     return NotImplementedError
 
-  def dealers_turn_state(self, should_print_info = True):
+  def dealers_turn_state(self, subsequent_round = True):
     # dealer's cards can now be face up.
     self.dealers_hand[1].set_face_down(False)
     # ask for either hit, stand, or double down (if allowed)
 
-    if should_print_info:
-      self.__print_dealer_info()
+    if not subsequent_round:
+      print
+      print 'Dealers turn'
+
+    self.__print_dealer_info()
+
+    soft_17 = False
+    if len(self.dealer_values) > 1:
+      # This is to avoid the extreme case of where the
+      # Aces are being considered 1
+      # eg A 6 10
+      # values = [17, 27]
+      for i in range(1, len(self.dealer_values)):
+        if self.dealer_values[i] == 17:
+          soft_17 = True
+
     if self.dealer_busted:
       return self.end_game_state()
-    elif self.dealer_best_val <= 17:
+    elif self.dealer_best_val < 17 or soft_17:
       # dealer hits
       self.dealers_hand.append(self.deck.pop())
       self.__update_hand(False)
@@ -194,6 +228,7 @@ class Blackjack():
 
     if result == PW:
       self.player_wins += 1
+      self.player_bal += 2 * self.player_bet
       print 'You win!'
     elif result == PL:
       self.player_losses += 1
@@ -225,7 +260,7 @@ class Blackjack():
     self.round_num += 1
     print
     print '-----------------------------------------------------------------------'
-    print 'Round number ' + str(self.round_num)
+    print 'Round ' + str(self.round_num)
     print 'Wins: ' + str(self.player_wins)
     print 'Losses: ' + str(self.player_losses)
     total_played = self.player_wins + self.player_losses
@@ -234,7 +269,9 @@ class Blackjack():
     # determine whether we need to shuffle the deck
     if self.round_num % 6 == 0:
       # shuffle
+      print 'Shuffling deck...'
       self.__shuffle_deck()
+    print 'Balance: $' + str(self.player_bal)
     # reset player / dealer hands
     # put used cards on the bottom
     self.deck = self.players_hand + self.dealers_hand + self.deck
@@ -244,6 +281,22 @@ class Blackjack():
     self.best_dealer_val = -1
     self.player_values = []
     self.dealer_values = []
+    self.player_bet = 0
+
+    # ask for player to bet
+    while True:
+      print 'How much would you like to bet? (integer value)'
+      inp = raw_input('--> ')
+      try:
+        inp = int(float(inp))
+        if inp < self.player_bal:
+          self.player_bet = inp
+          self.player_bal -= inp
+          break
+        else:
+          print 'Invalid input. You must enter something you can afford'
+      except:
+        print 'Please enter an integer'
 
     # deal to player and dealer
     card = self.deck.pop()
@@ -288,6 +341,7 @@ class Blackjack():
     return values
 
   def __print_game_state(self):
+    print 'Balance: $' + str(self.player_bal)
     self.__print_dealer_info()
     self.__print_player_info()
     print ''
