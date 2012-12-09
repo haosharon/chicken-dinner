@@ -96,11 +96,10 @@ class Blackjack():
       self.dealer_best_val = best_val
 
 
-  def players_turn_state(self):
-    self.__print_game_state()
+  def players_turn_state(self, should_print_info = True):
+    if should_print_info:
+      self.__print_player_info()
     if self.player_busted:
-      print 'BUSTED'
-      # done
       return self.end_game_state()
     # ask for either hit, stand, or double down (if allowed)
     can_dd = False
@@ -137,12 +136,13 @@ class Blackjack():
 
     return NotImplementedError
 
-  def dealers_turn_state(self):
+  def dealers_turn_state(self, should_print_info = True):
     # dealer's cards can now be face up.
     self.dealers_hand[1].set_face_down(False)
     # ask for either hit, stand, or double down (if allowed)
 
-    self.__print_game_state()
+    if should_print_info:
+      self.__print_dealer_info()
     if self.dealer_busted:
       return self.end_game_state()
     elif self.dealer_best_val <= 17:
@@ -161,8 +161,10 @@ class Blackjack():
     PU = 2
     result = -1
     if self.player_busted:
+      print 'YOU BUSTED'
       result = PL
     elif self.dealer_busted:
+      print 'DEALER BUSTED'
       result = PW
     else:
       # see who won
@@ -190,7 +192,6 @@ class Blackjack():
         # TODO what should we do?
         result = PW
 
-    print ''
     if result == PW:
       self.player_wins += 1
       print 'You win!'
@@ -200,6 +201,7 @@ class Blackjack():
     elif result == PU:
       print 'Push'
 
+    print ''
     # find out if they want to play again
     play_again = False
     while True:
@@ -260,8 +262,10 @@ class Blackjack():
     # update player / dealer values
     self.__update_hand(True)
     self.__update_hand(False)
+    self.__print_game_state()
+
     # players turn
-    self.players_turn_state()
+    self.players_turn_state(False)
 
 
   def __shuffle_deck(self):
@@ -276,7 +280,7 @@ class Blackjack():
         ace_values = card.int_value()
         for i in range(values_length):
           values.append(values[i] + ace_values[1])
-          values[i] += card.int_value[0]
+          values[i] += card.int_value()[0]
       else:
         for i in range(values_length):
           values[i] += card.int_value()
@@ -284,11 +288,17 @@ class Blackjack():
     return values
 
   def __print_game_state(self):
+    self.__print_dealer_info()
+    self.__print_player_info()
+    print ''
+
+  def __print_dealer_info(self):
     print 'Dealers hand:'
     print self.__hand_str(self.dealers_hand)
-    print 'Your hand:'
+
+  def __print_player_info(self):
+    print 'Players hand:'
     print self.__hand_str(self.players_hand)
-    print
 
   def __hand_str(self, hand):
     s = ''
